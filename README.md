@@ -41,58 +41,78 @@ I utilized Terraform, an Infrastructure as Code (IaC) tool, to automate the depl
 
 With the GKE cluster now in place, the next phase is to automate the deployment of ArgoCD, a tool for continuous delivery, to manage applications within the Kubernetes cluster.
 
-# Step 2: ArgoCD Installation Using Helm
-
-This section outlines the process of installing ArgoCD on the Google Kubernetes Engine (GKE) cluster using Helm, which is a package manager for Kubernetes.
+# Step 2: Automated ArgoCD Installation Using Terraform and Helm
 
 ## Overview
 
-ArgoCD is a continuous delivery tool for Kubernetes that automates the deployment of applications from Git repositories to Kubernetes clusters. It follows the GitOps methodology, making deployments easier and more transparent.
+In this step, I automated the installation of ArgoCD on our Google Kubernetes Engine (GKE) cluster using Terraform in combination with Helm. ArgoCD is a Kubernetes-native continuous delivery tool that simplifies the deployment and management of applications.
 
-## Installation Steps
+## Automated Installation Process
 
-1. **Helm Installation:**
-   - Ensured that Helm, the Kubernetes package manager, was installed on the local machine.
+1. **Terraform Configuration:**
+   - Added Helm provider and a Helm release resource to our `main.tf` Terraform configuration.
+   - Specified the ArgoCD Helm chart and its version, along with the custom `values.yaml` file for configuration.
 
-2. **Helm Repository Setup:**
-   - Added the ArgoCD repository to Helm by running:
-     ```bash
-     helm repo add argo https://argoproj.github.io/argo-helm
-     ```
-
-3. **Deploy ArgoCD:**
-   - Created a basic `values.yaml` file to configure the ArgoCD installation.
-   - Installed ArgoCD onto the Kubernetes cluster using Helm with the command:
-     ```bash
-     helm install argocd argo/argo-cd -f values.yaml
-     ```
+2. **Applying Terraform Configuration:**
+   - Ran `terraform apply` to automatically deploy ArgoCD onto the Kubernetes cluster.
 
 ## Accessing ArgoCD UI
 
 - **Port Forwarding:**
-  - To access the ArgoCD UI, set up port forwarding with the command:
+  - To access the ArgoCD UI, you can set up port forwarding with:
     ```bash
     kubectl port-forward service/argocd-server -n default 8080:443
     ```
-  - The ArgoCD UI can then be accessed at http://localhost:8080.
+  - Access the UI at http://localhost:8080.
 
 - **Admin Password Retrieval:**
-  - The initial admin password for ArgoCD can be retrieved with:
+  - Retrieve the initial admin password for ArgoCD with:
     ```bash
     kubectl -n default get secret argocd-initial-admin-secret -o jsonpath="{.data.password}" | base64 -d
     ```
 
 - **Deleting the Initial Secret:**
-  - For security, it's recommended to delete the initial admin secret after logging in for the first time:
+  - It's recommended to delete the initial admin secret for security:
     ```bash
     kubectl -n default delete secret argocd-initial-admin-secret
     ```
 
+## Customization and Configuration
+
+- The `values.yaml` file used in the Helm chart can be customized for advanced configurations of ArgoCD.
+- Configuring ingress in the `values.yaml` under `server.ingress.enabled` is advisable for easier and secure access.
+
 ## Next Steps
 
-With ArgoCD successfully installed and configured, the next step involves setting up ArgoCD to manage applications across the Kubernetes cluster. This will include the deployment of our main application, `evmosd`, as well as configuring monitoring and other necessary services.
+With ArgoCD now installed and operational, we'll focus on setting it up to manage applications across both the public and private GKE clusters.
 
-## Additional Notes
+# Step 3: Creation of a Private GKE Cluster
 
-- The `values.yaml` file used for the Helm deployment can be customized further for more advanced configurations of ArgoCD.
-- It is advisable to set up ingress for ArgoCD for easier and more secure access. This can be configured in the `values.yaml` file under the `server.ingress.enabled` section.
+## Overview
+
+This step involves creating a private Google Kubernetes Engine (GKE) cluster using Terraform. A private cluster enhances security by ensuring that the nodes are not exposed to the public internet.
+
+## Terraform Configuration for Private Cluster
+
+1. **Cluster and Node Pool Configuration:**
+   - Defined a `google_container_cluster` resource for the private cluster in `main.tf`.
+   - Configured `private_cluster_config` to make the cluster private.
+   - Added a `google_container_node_pool` resource for the node pool associated with the private cluster.
+
+2. **Security Settings:**
+   - Used `master_authorized_networks_config` to allow specific IP ranges (the public cluster's IP) to access the private cluster's Kubernetes API server.
+
+3. **Applying the Configuration:**
+   - Ran `terraform apply` to create the private cluster with the specified configuration.
+
+## Cluster Details
+
+- **Cluster Name:** evmos-private-gke-cluster
+- **Location:** europe-west1-d
+- **Node Count:** 2
+- **Machine Type:** e2-medium
+- **Master Authorized Networks:** Enabled to allow access from the public cluster.
+
+## Next Steps
+
+With the private GKE cluster now in place, the next phase involves configuring ArgoCD to manage applications on both the public and private clusters.
