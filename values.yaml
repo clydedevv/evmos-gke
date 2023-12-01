@@ -1,0 +1,51 @@
+# values.yaml
+
+# Repository server settings
+repoServer:
+  # Resources requests and limits for the repository server
+  resources:
+    requests:
+      cpu: 250m
+      memory: 512Mi
+    limits:
+      cpu: 500m
+      memory: 1Gi
+
+# ArgoCD server settings
+server:
+  # Service account settings for the server
+  serviceAccount:
+    create: true # Create a new service account for the ArgoCD server
+  # Resources requests and limits for the server
+  resources:
+    requests:
+      cpu: 250m
+      memory: 512Mi
+    limits:
+      cpu: 500m
+      memory: 1Gi
+  # Service settings
+  service:
+    type: LoadBalancer # Expose the ArgoCD server using a load balancer
+
+# Redis settings
+redis:
+  # Resources requests and limits for Redis
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: 200m
+      memory: 256Mi
+
+# Controller settings
+controller:
+  # Resources requests and limits for the controller
+  resources:
+    requests:
+      cpu: 250m
+      memory: 512Mi
+    limits:
+      cpu: 500m
+      memory: 1Gi
