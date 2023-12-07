@@ -116,3 +116,17 @@ This step involves creating a private Google Kubernetes Engine (GKE) cluster usi
 ## Next Steps
 
 With the private GKE cluster now in place, the next phase involves configuring ArgoCD to manage applications on both the public and private clusters.
+
+# Step 4: Ensure ArgoCD can manage both clusters 
+![image](https://github.com/clydedevv/evmos-gke/assets/80094928/c74cfd50-e82d-48f6-b6e9-f7536b3e9886)
+ArgoCD is configured to run with the public cluster. Roadblocked on how to get it connected to the private cluster, I've followed up with Traiano and Amine and waiting for some guidance. 
+I configured master_authorized_networks_config in the Terraform script to include the public cluster's external IP and your personal IP for the private cluster, ensuring controlled access.Tried to use argocd cluster add command to add the private cluster to ArgoCD. This step typically creates the necessary service accounts, roles, and role bindings in the target cluster. Encountered an issue with the command timing out, likely due to network connectivity problems between the public cluster (where ArgoCD is running) and the private cluster.
+
+Reviewed and updated the network settings in the Terraform configuration to ensure the private cluster's API server is accessible from the public cluster.
+Attempted various network configurations, including adding different IP addresses to the master_authorized_networks_config to improve connectivity.
+
+Explored using an existing IAM role with sufficient access (evmos-gke-sa@evmos-gke-challenge.iam.gserviceaccount.com) for managing both clusters.
+Attempted to create a Kubernetes secret with the service account token to manually add the private cluster to ArgoCD. However, faced issues with the token not being set correctly.
+
+Explored manually registering the private cluster in ArgoCD by creating a secret with the kubeconfig of the private cluster. This approach bypasses the argocd cluster add command and directly injects the necessary configuration into ArgoCD. Still encountered issues, might be my Kubectl version?
+
