@@ -1,8 +1,8 @@
-provider "google" {
-  credentials = file("/Users/clydecarver/evmos-gke-5f49a1378ef4.json")
-  project     = "evmos-gke"
-  region      = "europe-west1-d"
-}
+  provider "google" {
+    credentials = file("/Users/clydecarver/evmos-gke-challenge-99b417c42d7c.json")
+    project     = "evmos-gke-challenge"
+    region      = "europe-west1-d"
+  }
 
 # Public GKE Cluster Configuration
 resource "google_container_cluster" "primary" {
@@ -27,6 +27,7 @@ resource "google_container_node_pool" "primary_nodes" {
   node_count = 2
 
   node_config {
+    service_account = "evmos-gke-sa@evmos-gke-challenge.iam.gserviceaccount.com"
     preemptible  = false
     machine_type = "e2-medium"
 
@@ -52,7 +53,15 @@ resource "google_container_cluster" "private" {
 # Restrict access to the cluster master endpoint
   master_authorized_networks_config {
     cidr_blocks {
-      cidr_block   = "35.190.210.212/32"  # Public cluster external IP
+      cidr_block   = "86.88.180.158/32"  # Personal IP
+      display_name = "home-network-access"
+    }
+    cidr_blocks {
+      cidr_block   = "35.190.197.146/32"  # ArgoCD IP
+      display_name = "argocd-access"
+    }
+    cidr_blocks {
+      cidr_block   = "35.241.254.255/32"  # Public cluster external IP
       display_name = "public-cluster-access"
     }
   }
@@ -72,6 +81,7 @@ resource "google_container_node_pool" "private_nodes" {
   node_count = 2
 
   node_config {
+    service_account = "evmos-gke-sa@evmos-gke-challenge.iam.gserviceaccount.com"
     preemptible  = false
     machine_type = "e2-medium"
 
@@ -100,3 +110,5 @@ resource "helm_release" "argocd" {
     "${file("values.yaml")}"
   ]
 }
+
+
