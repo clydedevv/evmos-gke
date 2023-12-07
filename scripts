@@ -1,0 +1,70 @@
+# Loose overview of commands I used in this process
+
+SET-UP SERVICE ACCOUNT WITH RBAC
+(need to automate this later with Terraform)
+![994453a7e151e3affc85282364ea4cf7.png](:/950dfc06d51f495c8c77df0fa0dd900b)
+
+Add and generate service Account key 
+
+pass service account directly in node config and also export it
+
+deploy clusters and nodes
+
+SET HELM ENVIRONMENT
+gcloud container clusters get-credentials evmos-gke-cluster --zone europe-west1-d --project evmos-gke-challenge
+
+kubectl get nodes
+
+NAME                                                  STATUS   ROLES    AGE   VERSION
+gke-evmos-gke-cluster-evmos-gke-nodes-fdb01d35-l2f5   Ready    <none>   15m   v1.27.3-gke.100
+gke-evmos-gke-cluster-evmos-gke-nodes-fdb01d35-wq0k   Ready    <none>   15m   v1.27.3-gke.100
+
+kubectl config current-context
+
+gke_evmos-gke-challenge_europe-west1-d_evmos-gke-cluster	
+
+
+CURRENT MAIN.TF DEPLOYS ARGOCD IN DEFAULT NAMESPACE
+
+kubectl get svc -n default | grep argocd-server
+
+
+brew install argocd
+
+argocd account update-password --current-password vzZoj5GtRhMz6TR8 --new-password 8EqGysNSPgPazB0
+
+**Adding Clusters to ArgoCD:**
+Get Cluster Credentials:
+
+gcloud container clusters get-credentials evmos-gke-cluster --zone europe-west1-d --project evmos-gke-challenge
+
+gcloud container clusters get-credentials evmos-private-gke-cluster --zone europe-west1-d --project evmos-gke-challenge
+
+ADD THE CLUSTERS TO ARGO CD
+argocd cluster add gke_evmos-gke-challenge_europe-west1-d_evmos-gke-cluster
+
+argocd cluster add gke_evmos-gke-challenge_europe-west1-d_evmos-private-gke-cluster
+
+THIS WILL CREATE THE SERVICE ACCOUNT 
+
+kubectl create secret generic evmos-gke-sa-secret \
+  --from-file=token=/Users/clydecarver/evmos-gke-challenge-99b417c42d7c.json \
+-n default
+
+CREATE KUBERNETES SERVICE ACCOUNT 
+❯ kubectl create serviceaccount evmos-gke-sa -n default
+
+serviceaccount/evmos-gke-sa created
+❯ kubectl create clusterrolebinding evmos-gke-sa-binding --clusterrole=cluster-admin --serviceaccount=default:evmos-gke-sa
+
+clusterrolebinding.rbac.authorization.k8s.io/evmos-gke-sa-binding created
+❯ SECRET_NAME=$(kubectl get serviceaccount evmos-gke-sa -n default -o=jsonpath='{.secrets[0].name}')
+
+❯ TOKEN=$(kubectl get secret $SECRET_NAME -n default -o=jsonpath='{.data.token}' | base64 --decode)
+
+kubectl get crd | grep argoproj.io
+
+apply the argocd manifests
+kubectl apply -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
+
+kubectl apply -f evmosd-manifest.yaml -n default
