@@ -1,0 +1,18 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: evmosd-private
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/evmos/evmos
+    targetRevision: v15.0.0
+    path: /opt/evmos/helm
+  destination:
+    server: 35.241.254.255
+    namespace: argocd
+  syncPolicy:
+    automated:
+      prune: true
+
