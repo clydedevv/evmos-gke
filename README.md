@@ -130,3 +130,38 @@ Attempted to create a Kubernetes secret with the service account token to manual
 
 Explored manually registering the private cluster in ArgoCD by creating a secret with the kubeconfig of the private cluster. This approach bypasses the argocd cluster add command and directly injects the necessary configuration into ArgoCD. Still encountered issues, might be my Kubectl version?
 
+UPDATE:
+# Step 4: Ensure ArgoCD can manage both clusters
+
+![ArgoCD Configuration](https://github.com/clydedevv/evmos-gke/assets/80094928/c74cfd50-e82d-48f6-b6e9-f7536b3e9886)
+
+## Overview
+Successfully configured ArgoCD to manage applications in both the public and private GKE clusters. The key challenge was establishing connectivity between ArgoCD (running in the public cluster) and the private cluster.
+
+## Process and Resolution
+
+1. **Initial Setup**: 
+   - ArgoCD was initially set up to run within the public cluster. The goal was to extend its management capabilities to the private cluster.
+
+2. **Network Configuration**:
+   - Configured `master_authorized_networks_config` in the Terraform script to include the public cluster's external IP and a personal IP for the private cluster, ensuring controlled access.
+   - Initially faced issues with `argocd cluster add` command timing out, likely due to network connectivity problems between the public and private clusters.
+
+3. **Troubleshooting and Exploration**:
+   - Reviewed and updated network settings in the Terraform configuration to ensure the private cluster's API server is accessible from the public cluster.
+   - Attempted various network configurations, including adding different IP addresses to the `master_authorized_networks_config` to improve connectivity.
+   - Explored using an existing IAM role (`evmos-gke-sa@evmos-gke-challenge.iam.gserviceaccount.com`) with sufficient access for managing both clusters.
+
+4. **Manual Configuration Attempts**:
+   - Attempted to create a Kubernetes secret with the service account token to manually add the private cluster to ArgoCD. Faced issues with the token not being set correctly.
+   - Explored manually registering the private cluster in ArgoCD by creating a secret with the kubeconfig of the private cluster. This approach bypasses the `argocd cluster add` command but still encountered issues.
+
+5. **Successful Resolution**:
+   - The breakthrough came when updating the `master_authorized_networks_config` to include the external IPs of the nodes in the public cluster.
+   - Running `argocd cluster add` for the private cluster was successful after this update, as ArgoCD could now establish connectivity with the private cluster's API server.
+   - This step involved ensuring the network configurations allowed ArgoCD, running in the public cluster, to communicate effectively with the private cluster.
+
+## Conclusion
+ArgoCD is now capable of managing resources across both the public and private GKE clusters. This setup facilitates centralized application management and enhances our deployment workflows.
+
+
