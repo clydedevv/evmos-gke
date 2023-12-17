@@ -164,4 +164,12 @@ Successfully configured ArgoCD to manage applications in both the public and pri
 ## Conclusion
 ArgoCD is now capable of managing resources across both the public and private GKE clusters. This setup facilitates centralized application management and enhances our deployment workflows.
 
+# Step 5: Monitoring
+## Current State
+Set up basic monitoring for ArgoCD using Prometheus. This setup provides visibility into the performance and health of the ArgoCD components.
+The monitoring system is currently scraping metrics from ArgoCD's exposed endpoints, although there are some limitations in capturing specific metrics from certain endpoints.
+Integrated Prometheus with Grafana, allowing us to visualize the metrics and create dashboards for easier monitoring.
+Considerations for Future Enhancements
+Encountered challenges in configuring Prometheus to scrape certain metrics endpoints consistently. Future efforts could involve troubleshooting and refining the Prometheus scrape configurations.
+should revisit the monitoring setup to ensure that it captures all necessary metrics and aligns with our operational requirements.
 
