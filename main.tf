@@ -4,6 +4,12 @@
     region      = "europe-west1-d"
   }
 
+
+
+# Google Client Config
+data "google_client_config" "default" {}
+
+
 # Public GKE Cluster Configuration
 resource "google_container_cluster" "primary" {
   name     = "evmos-gke-cluster"
@@ -57,12 +63,20 @@ resource "google_container_cluster" "private" {
       display_name = "home-network-access"
     }
     cidr_blocks {
-      cidr_block   = "35.190.197.146/32"  # ArgoCD IP
+      cidr_block   = "104.199.13.13/32"  # ArgoCD IP
       display_name = "argocd-access"
     }
     cidr_blocks {
-      cidr_block   = "35.241.254.255/32"  # Public cluster external IP
+      cidr_block   = "34.38.196.80/32"  # Public cluster external IP
       display_name = "public-cluster-access"
+    }
+    cidr_blocks {
+      cidr_block   = "34.38.135.207/32"  # Public cluster node 1 external IP
+      display_name = "public-node-1-access"
+    }
+    cidr_blocks {
+      cidr_block   = "35.233.116.195/32"  # Public cluster node 2 external IP
+      display_name = "public-node-2-access"
     }
   }
 
@@ -91,6 +105,14 @@ resource "google_container_node_pool" "private_nodes" {
   }
 }
 
+# Automate ArgoCD namespace installation 
+resource "kubernetes_namespace" "argocd" {
+  provider = kubernetes.public
+  metadata {
+    name = "argocd"
+  }
+}
+
 # Automate ArgoCD installation 
 # Add the Helm provider
 provider "helm" {
@@ -100,6 +122,7 @@ provider "helm" {
 }
 
 # Define the ArgoCD Helm release
+
 resource "helm_release" "argocd" {
   name       = "argocd"
   repository = "https://argoproj.github.io/argo-helm"
@@ -111,4 +134,60 @@ resource "helm_release" "argocd" {
   ]
 }
 
+#testing endpoints
+output "public_cluster_endpoint" {
+  value = "https://${google_container_cluster.primary.endpoint}"
+}
 
+output "private_cluster_endpoint" {
+  value = "https://${google_container_cluster.private.endpoint}"
+}
+
+#set kubernetes providers
+provider "kubernetes" {
+  alias                  = "public"
+
+  host = "https://${google_container_cluster.primary.endpoint}"
+  token                  = data.google_client_config.default.access_token
+  cluster_ca_certificate = base64decode(google_container_cluster.primary.master_auth[0].cluster_ca_certificate)
+}
+
+#set kubernetes providers
+provider "kubernetes" {
+  alias                  = "private"
+
+  host = "https://${google_container_cluster.private.endpoint}"
+  token                  = data.google_client_config.default.access_token
+  cluster_ca_certificate = base64decode(google_container_cluster.private.master_auth[0].cluster_ca_certificate)
+}
+
+
+##MONITORING
+resource "kubernetes_namespace" "monitoring" {
+  provider = kubernetes.public
+  metadata {
+    name = "monitoring"
+  }
+}
+
+resource "helm_release" "prometheus" {
+  name       = "prometheus"
+  repository = "https://prometheus-community.github.io/helm-charts"
+  chart      = "prometheus"
+  namespace  = "monitoring"
+  set {
+    name  = "server.service.type"
+    value = "LoadBalancer"
+  }
+}
+
+resource "helm_release" "grafana" {
+  name       = "grafana"
+  repository = "https://grafana.github.io/helm-charts"
+  chart      = "grafana"
+  namespace  = "monitoring"
+  set {
+    name  = "service.type"
+    value = "LoadBalancer"
+  }
+}
