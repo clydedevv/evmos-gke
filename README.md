@@ -173,3 +173,17 @@ Considerations for Future Enhancements
 Encountered challenges in configuring Prometheus to scrape certain metrics endpoints consistently. Future efforts could involve troubleshooting and refining the Prometheus scrape configurations.
 should revisit the monitoring setup to ensure that it captures all necessary metrics and aligns with our operational requirements.
 
+
+# Deployment of Applications
+ evmosd has been successfully deployed to the internal cluster, leveraging Kubernetes deployments for orchestration.
+ My preferred monitoring solution for tendermint apps is https://github.com/clydedevv/tenderduty
+Next Steps
+
+#Continuous Integration Pipeline
+ Objective: To create a CI pipeline capturing the processes of building, testing, and deploying the evmosd application.
+ Implementation: The pipeline will be automated using tools like GitHub Actions or Jenkins. It will include steps for code integration, Docker image building, pushing the image to a registry, updating Kubernetes manifests, and notifying ArgoCD for deployment synchronization.
+ 
+#Evmosd Public Access Configuration
+ Objective: To set up a secure and efficient method for exposing evmosd to the internet.
+ Implementation: This will involve using a Kubernetes gateway controller, such as NGINX or Traefik, to manage inbound traffic. The configuration will ensure that security best practices are adhered to, preventing unauthorized access while maintaining efficient routing of requests.
+
