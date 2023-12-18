@@ -1,0 +1,28 @@
+## need to build another version with genesis.json and addrbook.json and probably state-sync configured, testing with this basic model
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: evmos-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: evmos
+  template:
+    metadata:
+      labels:
+        app: evmos
+    spec:
+      containers:
+      - name: evmos
+        image: tharsishq/evmos:latest
+        ports:
+        - containerPort: 26656
+        - containerPort: 26657
+        - containerPort: 1317
+        - containerPort: 9090
+        - containerPort: 8545
+        - containerPort: 8546
+        command: ["evmosd"]
+        args: ["start", "--minimum-gas-prices=0.025aevmos"]
